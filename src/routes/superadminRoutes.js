@@ -8,6 +8,7 @@ const {
   createHospitalAdmin,
   getStatistics,
   getUsersByRole,
+  deleteUser,
   resetAdminPassword,
 } = require("../controllers/superadminController");
 const { requireAuth, requireRole } = require("../middleware/authMiddleware");
@@ -24,5 +25,6 @@ router.post("/hospital-admin", createHospitalAdmin);
 router.post("/hospital-admin/reset-password", resetAdminPassword);
 router.get("/statistics", getStatistics);
 router.get("/users", getUsersByRole);
+router.delete("/users/:id", deleteUser);
 
 module.exports = router;
