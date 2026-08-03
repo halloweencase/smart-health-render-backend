@@ -1,0 +1,166 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Status {
+  active
+  inactive
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  HOSPITAL_ADMIN
+  DOCTOR
+  STAFF
+  PATIENT
+}
+
+enum AppointmentStatus {
+  scheduled
+  completed
+  cancelled
+}
+
+model Hospital {
+  hospital_id         Int            @id @default(autoincrement())
+  hospital_name       String         @db.VarChar(255)
+  registration_number String         @unique(map: "hospitals_registration_number_unique") @db.VarChar(100)
+  email               String         @db.VarChar(180)
+  phone               String         @db.VarChar(30)
+  address             String         @db.Text
+  city                String         @db.VarChar(100)
+  state               String         @db.VarChar(100)
+  country             String         @db.VarChar(100)
+  status              Status         @default(active)
+  created_at          DateTime       @default(now()) @db.Timestamp(6)
+  
+  // Relations
+  users               User[]
+  reports             Report[]
+  prescriptions       Prescription[]
+  appointments        Appointment[]
+  health_metrics      HealthMetric[]
+
+  @@map("hospitals")
+}
+
+model User {
+  id                  Int            @id @default(autoincrement())
+  full_name           String         @db.VarChar(120)
+  email               String         @unique(map: "users_email_unique") @db.VarChar(180)
+  phone               String         @db.VarChar(30)
+  password            String         @db.VarChar(255)
+  role                UserRole       @default(PATIENT)
+  status              Status         @default(active)
+  hospital_id         Int?
+  created_by          Int?
+  created_at          DateTime       @default(now()) @db.Timestamp(6)
+  updated_at          DateTime       @default(now()) @updatedAt @db.Timestamp(6)
+
+  // Relations
+  hospital            Hospital?      @relation(fields: [hospital_id], references: [hospital_id], onDelete: SetNull)
+  creator             User?          @relation("UserCreator", fields: [created_by], references: [id], onDelete: SetNull)
+  created_users       User[]         @relation("UserCreator")
+  
+  // As a patient
+  patient_reports       Report[]       @relation("ReportPatient")
+  patient_prescriptions Prescription[] @relation("PrescriptionPatient")
+  patient_appointments  Appointment[]  @relation("AppointmentPatient")
+  patient_metrics       HealthMetric[] @relation("MetricPatient")
+
+  // As a doctor
+  doctor_reports       Report[]       @relation("ReportDoctor")
+  doctor_prescriptions Prescription[] @relation("PrescriptionDoctor")
+  doctor_appointments  Appointment[]  @relation("AppointmentDoctor")
+
+  @@map("users")
+  @@index([hospital_id])
+  @@index([created_by])
+}
+
+model Report {
+  report_id   Int      @id @default(autoincrement())
+  patient_id  Int
+  doctor_id   Int?
+  title       String   @db.VarChar(255)
+  category    String   @db.VarChar(100)
+  hospital_id Int
+  notes       String?  @db.Text
+  file_url    String?  @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  patient     User     @relation("ReportPatient", fields: [patient_id], references: [id], onDelete: Cascade)
+  doctor      User?    @relation("ReportDoctor", fields: [doctor_id], references: [id], onDelete: SetNull)
+  hospital    Hospital @relation(fields: [hospital_id], references: [hospital_id], onDelete: Cascade)
+
+  @@map("reports")
+  @@index([patient_id])
+  @@index([doctor_id])
+  @@index([hospital_id])
+}
+
+model Prescription {
+  prescription_id Int      @id @default(autoincrement())
+  patient_id      Int
+  doctor_id       Int
+  hospital_id     Int
+  diagnosis       String   @db.Text
+  medications     String   @db.Text
+  notes           String?  @db.Text
+  created_at      DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  patient         User     @relation("PrescriptionPatient", fields: [patient_id], references: [id], onDelete: Cascade)
+  doctor          User     @relation("PrescriptionDoctor", fields: [doctor_id], references: [id], onDelete: Cascade)
+  hospital        Hospital @relation(fields: [hospital_id], references: [hospital_id], onDelete: Cascade)
+
+  @@map("prescriptions")
+  @@index([patient_id])
+  @@index([doctor_id])
+  @@index([hospital_id])
+}
+
+model Appointment {
+  appointment_id   Int               @id @default(autoincrement())
+  patient_id       Int
+  doctor_id        Int
+  hospital_id      Int
+  appointment_date DateTime          @db.Timestamp(6)
+  status           AppointmentStatus @default(scheduled)
+  created_at       DateTime          @default(now()) @db.Timestamp(6)
+
+  // Relations
+  patient          User              @relation("AppointmentPatient", fields: [patient_id], references: [id], onDelete: Cascade)
+  doctor           User              @relation("AppointmentDoctor", fields: [doctor_id], references: [id], onDelete: Cascade)
+  hospital         Hospital          @relation(fields: [hospital_id], references: [hospital_id], onDelete: Cascade)
+
+  @@map("appointments")
+  @@index([patient_id])
+  @@index([doctor_id])
+  @@index([hospital_id])
+}
+
+model HealthMetric {
+  metric_id      Int      @id @default(autoincrement())
+  patient_id     Int
+  hospital_id    Int
+  heart_rate     Int?
+  blood_sugar    Int?
+  blood_pressure String?  @db.VarChar(30)
+  bmi            Decimal? @db.Decimal(5, 2)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+
+  // Relations
+  patient        User     @relation("MetricPatient", fields: [patient_id], references: [id], onDelete: Cascade)
+  hospital       Hospital @relation(fields: [hospital_id], references: [hospital_id], onDelete: Cascade)
+
+  @@map("health_metrics")
+  @@index([patient_id])
+  @@index([hospital_id])
+}

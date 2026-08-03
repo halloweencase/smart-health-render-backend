@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const pool = require("../config/db");
+const prisma = require("../config/db");
 
 const requireAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -81,11 +81,8 @@ const authorizeHospitalAccess = async (req, res, next) => {
 
       // If checking users (admin managing users, doctor/staff checking patient)
       if (fullUrl.includes("/admin/users") || fullUrl.includes("/doctor/patient") || fullUrl.includes("/staff/patient")) {
-        const [rows] = await pool.execute(
-          "SELECT hospital_id FROM users WHERE id = ?",
-          [targetId]
-        );
-        if (rows.length > 0 && rows[0].hospital_id !== userHospitalId) {
+        const user = await prisma.user.findUnique({ where: { id: Number(targetId) }, select: { hospital_id: true } });
+        if (user && user.hospital_id !== userHospitalId) {
           return res.status(403).json({
             success: false,
             message: "Access denied. Target user belongs to a different hospital.",
@@ -95,11 +92,8 @@ const authorizeHospitalAccess = async (req, res, next) => {
 
       // If checking reports
       if (fullUrl.includes("/report")) {
-        const [rows] = await pool.execute(
-          "SELECT hospital_id FROM reports WHERE report_id = ?",
-          [targetId]
-        );
-        if (rows.length > 0 && rows[0].hospital_id !== userHospitalId) {
+        const report = await prisma.report.findUnique({ where: { report_id: Number(targetId) }, select: { hospital_id: true } });
+        if (report && report.hospital_id !== userHospitalId) {
           return res.status(403).json({
             success: false,
             message: "Access denied. Target report belongs to a different hospital.",

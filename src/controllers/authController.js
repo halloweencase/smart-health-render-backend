@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const prisma = require("../config/db");
 const {
   createUser,
   findUserByEmail,
@@ -80,6 +81,11 @@ const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    const hospital = await prisma.hospital.findFirst({ where: { hospital_id: Number(hospital_id), status: "active" } });
+    if (!hospital) {
+      return res.status(400).json({ success: false, message: "Selected hospital is not available" });
+    }
 
     await createUser({
       full_name,
@@ -315,9 +321,9 @@ const logout = (req, res) => {
 
 const getHospitalsList = async (req, res) => {
   try {
-    const [rows] = await pool.execute(
-      "SELECT hospital_id, hospital_name, city FROM hospitals WHERE status = 'active'"
-    );
+    const rows = await prisma.hospital.findMany({
+      where: { status: "active" }, select: { hospital_id: true, hospital_name: true, city: true }, orderBy: { hospital_name: "asc" },
+    });
     return res.json({
       success: true,
       hospitals: rows,
