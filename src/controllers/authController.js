@@ -80,6 +80,14 @@ const register = async (req, res) => {
       });
     }
 
+    const existingPhone = await prisma.user.findFirst({ where: { phone } });
+    if (existingPhone) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number already exists",
+      });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const hospital = await prisma.hospital.findFirst({ where: { hospital_id: Number(hospital_id), status: "active" } });
@@ -92,7 +100,9 @@ const register = async (req, res) => {
       email,
       phone,
       password: hashedPassword,
-      role: "HOSPITAL_ADMIN",
+      // Public registration is exclusively for patients. Hospital Admins are
+      // created by a Super Admin; staff and doctors create patients internally.
+      role: "PATIENT",
       hospital_id: parseInt(hospital_id, 10),
     });
 
@@ -101,7 +111,7 @@ const register = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: "Patient account created successfully",
       token,
       user: sanitizeUser(user),
     });

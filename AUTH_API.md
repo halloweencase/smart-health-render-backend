@@ -18,11 +18,14 @@ Content-Type: application/json
   "full_name": "Ananya Sharma",
   "email": "ananya@example.com",
   "phone": "+91 98765 43210",
-  "password": "secret123"
+  "password": "secret123",
+  "hospital_id": 1
 }
 ```
 
-Returns a JWT token and the registered user.
+Creates a `PATIENT` account only, linked to the selected active hospital. Hospital
+Administrators are created by the Super Admin; Doctors and Staff are created by
+the Hospital Administrator.
 
 ## Login
 
