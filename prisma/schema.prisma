@@ -45,6 +45,7 @@ model Hospital {
   prescriptions       Prescription[]
   appointments        Appointment[]
   health_metrics      HealthMetric[]
+  visits              Visit[]
 
   @@map("hospitals")
 }
@@ -77,6 +78,8 @@ model User {
   doctor_reports       Report[]       @relation("ReportDoctor")
   doctor_prescriptions Prescription[] @relation("PrescriptionDoctor")
   doctor_appointments  Appointment[]  @relation("AppointmentDoctor")
+  patient_visits       Visit[]        @relation("VisitPatient")
+  created_visits       Visit[]        @relation("VisitCreator")
 
   @@map("users")
   @@index([hospital_id])
@@ -161,6 +164,24 @@ model HealthMetric {
   hospital       Hospital @relation(fields: [hospital_id], references: [hospital_id], onDelete: Cascade)
 
   @@map("health_metrics")
+  @@index([patient_id])
+  @@index([hospital_id])
+}
+
+model Visit {
+  visit_id      Int      @id @default(autoincrement())
+  patient_id    Int
+  hospital_id   Int
+  created_by    Int
+  visit_date    DateTime @db.Timestamp(6)
+  description   String   @db.Text
+  created_at    DateTime @default(now()) @db.Timestamp(6)
+
+  patient       User     @relation("VisitPatient", fields: [patient_id], references: [id], onDelete: Cascade)
+  creator       User     @relation("VisitCreator", fields: [created_by], references: [id], onDelete: Restrict)
+  hospital      Hospital @relation(fields: [hospital_id], references: [hospital_id], onDelete: Cascade)
+
+  @@map("visits")
   @@index([patient_id])
   @@index([hospital_id])
 }

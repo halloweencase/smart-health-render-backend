@@ -5,6 +5,7 @@ const {
   getOwnPrescriptions,
   getOwnAppointments,
   getOwnMetrics,
+  getOwnVisits,
 } = require("../controllers/patientController");
 const { requireAuth, requireRole } = require("../middleware/authMiddleware");
 
@@ -16,5 +17,6 @@ router.get("/reports", getOwnReports);
 router.get("/prescriptions", getOwnPrescriptions);
 router.get("/appointments", getOwnAppointments);
 router.get("/metrics", getOwnMetrics);
+router.get("/visits", getOwnVisits);
 
 module.exports = router;
