@@ -10,6 +10,7 @@ const {
   getAppointments,
   updateAppointment,
   getDoctors,
+  addHealthMetric,
   createVisit,
   getVisits,
 } = require("../controllers/staffController");
@@ -25,6 +26,7 @@ router.post("/patient", registerPatient);
 router.put("/patient/:id", authorizeHospitalAccess, updatePatient);
 router.delete("/patient/:id", authorizeHospitalAccess, deletePatient);
 router.post("/report", uploadReport);
+router.post("/metrics", addHealthMetric);
 
 router.post("/visits", createVisit);
 router.get("/visits", getVisits);

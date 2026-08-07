@@ -157,6 +157,7 @@ model HealthMetric {
   blood_sugar    Int?
   blood_pressure String?  @db.VarChar(30)
   bmi            Decimal? @db.Decimal(5, 2)
+  measured_at    DateTime @default(now()) @db.Timestamp(6)
   created_at     DateTime @default(now()) @db.Timestamp(6)
 
   // Relations
