@@ -4,11 +4,14 @@ const {
   getPatients,
   registerPatient,
   updatePatient,
+  deletePatient,
   uploadReport,
   createAppointment,
   getAppointments,
   updateAppointment,
   getDoctors,
+  createVisit,
+  getVisits,
 } = require("../controllers/staffController");
 const { requireAuth, requireRole, authorizeHospitalAccess } = require("../middleware/authMiddleware");
 
@@ -20,7 +23,11 @@ router.get("/patients", getPatients);
 router.get("/doctors", getDoctors);
 router.post("/patient", registerPatient);
 router.put("/patient/:id", authorizeHospitalAccess, updatePatient);
+router.delete("/patient/:id", authorizeHospitalAccess, deletePatient);
 router.post("/report", uploadReport);
+
+router.post("/visits", createVisit);
+router.get("/visits", getVisits);
 
 router.post("/appointments", createAppointment);
 router.get("/appointments", getAppointments);
